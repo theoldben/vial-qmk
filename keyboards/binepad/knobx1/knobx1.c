@@ -24,18 +24,35 @@ void keyboard_pre_init_kb(void) {
 layer_state_t layer_state_set_kb(layer_state_t state) {
     state         = layer_state_set_user(state);
     uint8_t layer = get_highest_layer(state);
-    x1_layer_led(layer);
+
+    if (layer > 0) {
+        // Light LEDs for active layers
+        x1_layer_led(layer);
+    } else {
+        // Layer 0 = all LEDs OFF
+        const pin_t indicator_leds[4] = {IND1_LED, IND2_LED, IND3_LED, IND4_LED};
+        for (int i = 0; i < 4; i++) {
+            gpio_write_pin_low(indicator_leds[i]);
+        }
+    }
+
     return state;
 }
 
+
 void matrix_init_kb(void) {
-    // Direct PINS use; gpio -> switch -> ground.
-    // Setting Row 0 to ground makes it work like a direct pin
-    gpio_set_pin_output(ROW0_PIN); // Set Col0 as an output
-    gpio_write_pin_low(ROW0_PIN);  // Set Col0 to low / ground
+    gpio_set_pin_output(ROW0_PIN);
+    gpio_write_pin_low(ROW0_PIN);
+
+    // Force OFF all LEDs at boot
+    const pin_t indicator_leds[4] = {IND1_LED, IND2_LED, IND3_LED, IND4_LED};
+    for (int i = 0; i < 4; i++) {
+        gpio_write_pin_low(indicator_leds[i]);
+    }
 
     matrix_init_user();
 }
+
 
 bool process_x1_layer_up(keyrecord_t *record) {
     if (record->event.pressed) {
